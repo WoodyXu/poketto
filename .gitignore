@@ -1,2 +1,8 @@
 # python compiled
 *.pyc
+
+# distribution
+build/
+dist/
+eggs/
+*.egg-info/
