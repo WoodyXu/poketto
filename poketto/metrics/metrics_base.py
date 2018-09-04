@@ -13,7 +13,7 @@ class MetricsBase(object):
     """
     The abstract base metrics class
     """
-    def __init__(truths, preds, *args, **kwargs):
+    def __init__(self, truths, preds):
         """
         Parameters:
             preds: a list of guess probabilities or prediction labels
@@ -22,8 +22,8 @@ class MetricsBase(object):
         if preds is None or truths is None:
             raise ValueError("Please check None value!")
         if len(preds) == 0 or len(truths) == 0 or len(preds) != len(truths):
-            raise ValueError("Lengths of predictions and truths must be equal, but we get {} \
-                    predictions and {} ground truths!".format(len(preds), len(truths)))
+            raise ValueError("Lengths of predictions and truths must be equal, but we get {}"
+                    " predictions and {} ground truths!".format(len(preds), len(truths)))
 
         # the k-v of metrics, like {'accurary': 0.8, 'recall': 0.5, ...}
         self.metrics_d = {}

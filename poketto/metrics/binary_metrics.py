@@ -12,20 +12,21 @@ sys.setdefaultencoding("utf-8")
 import numpy as np
 import pandas as pd
 from sklearn import metrics
+import matplotlib
+matplotlib.use("agg")
 import matplotlib.pyplot as plt
-plt.switch_backend("agg")
 
-import metrics_base
+from .metrics_base import MetricsBase
 
-class BinaryMetrics(metrics_base.MetricsBase):
+class BinaryMetrics(MetricsBase):
     """
     Metrics Class for binary classification.
     """
-    def __init__(truths, preds):
-        super(BinaryMetrics, self).__init__()
+    def __init__(self, truths, preds):
+        super(BinaryMetrics, self).__init__(truths, preds)
 
-        self.truths = truths.reshape(-1).astype(int)
-        self.preds = preds.reshape(-1).astype(float)
+        self.truths = np.array(truths).reshape(-1).astype(int)
+        self.preds = np.array(preds).reshape(-1).astype(float)
 
         if np.min(self.preds) < 0.0 or np.max(self.preds) > 1.0:
             raise ValueError("Range of predictions must be [0, 1]!")
@@ -34,37 +35,39 @@ class BinaryMetrics(metrics_base.MetricsBase):
         if len(unique_truths) != 2 or 0 not in unique_truths or 1 not in unique_truths:
             raise ValueError("The ground truths for binary classification must be either 0 or 1!")
 
-            self._evaluate()
+        self._evaluate()
 
     def _evaluate(self):
         """
-        Calculate log loss, mse, auc, ks, optimal cut, 
+        Calculate logloss, mse, auc, ks, optimal cut, 
                   average precision, accuracy, precision and recall
         """
         # auc, log loss, mse
-        self.fpr, self.tpr, _ = metrics.roc_curve(self.truths, self.preds, pos_label=1)
+        self.fpr, self.tpr, self.threshold = metrics.roc_curve(self.truths, self.preds, pos_label=1)
         self.metrics_d["auc"] = metrics.auc(self.fpr, self.tpr)
-        self.metrics_d["log_loss"] = metrics.log_loss(self.truths, self.preds)
+        self.metrics_d["logloss"] = metrics.log_loss(self.truths, self.preds)
         self.metrics_d["mse"] = metrics.mean_squared_error(self.truths, self.preds)
 
         # ks
         data = pd.DataFrame({"truth": self.truths, "prediction": self.preds})
-        data["bucket"] = pd.cut(data["prediction"], np.linspace(0.0, 1.0, 1000))
-        grouped = data.groupby("bucket", as_index=False)
+        data["bucket"] = pd.cut(data["prediction"], np.linspace(0.0, 1.0, len(self.truths)))
+        grouped = data.groupby("bucket")
 
         bucket_data = pd.DataFrame()
-        bucket_data["min_pred"] = groupby.min()["prediction"]
-        bucket_data["max_pred"] = groupby.max()["prediction"]
-        bucket_data["positive_num"] = groupby.sum()["pos"]
+        bucket_data["min_pred"] = grouped.min()["prediction"]
+        bucket_data["max_pred"] = grouped.max()["prediction"]
+        bucket_data["positive_num"] = grouped.sum()["truth"]
         bucket_data["total_num"] = grouped.size()
         bucket_data["negative_num"] = bucket_data["total_num"] - bucket_data["positive_num"]
 
         bucket_data = bucket_data.sort_values(by="min_pred").reset_index(drop=True)
+        # here at each bucket, tn / (tn + fp) - fn / (tp + fn) = (1 - fp / (tn + fp)) - (1 - tp / (tp + fn))
+        # hence we get (1 - fpr) - (1 - tpr) = tpr - fpr
+        # so you can use self.tpr - self.fpr instead, actually we use this function to do unit test.
+
         bucket_data["ks"] = \
-                (
-                    bucket_data["negative_num"].cumsum() * 1.0 / bucket_data["negative_sum"].sum() - \
+                    bucket_data["negative_num"].cumsum() * 1.0 / bucket_data["negative_num"].sum() - \
                     bucket_data["positive_num"].cumsum() * 1.0 / bucket_data["positive_num"].sum()
-                ) * 100.0
 
         self.metrics_d["ks"] = bucket_data["ks"].max()
         opt_index = bucket_data["ks"].argmax()
@@ -84,11 +87,10 @@ class BinaryMetrics(metrics_base.MetricsBase):
         self.metrics_d["recall"] = tp * 1.0 / (tp + fn + 0.000000001)
 
     def __str__(self):
-        print("The metrics are as follows: ")
-        fomat_str = "AUC: {auc}, KS: {ks}, Optimal Cut: {opt_cut}\n \
-                MSE: {mse},Log Loss: {log_loss}, Average Precision: {average_precision}\n \
-                Accurary: {accuracy}, Precision: {precision}, Recall: {recall}"
-        print(format_str.format(**self.metrics_d))
+        format_str = "AUC: {auc}, KS: {ks}, Optimal Cut: {opt_cut}\n" \
+                     "MSE: {mse},Log Loss: {log_loss}, Average Precision: {average_precision}\n" \
+                     "Accurary: {accuracy}, Precision: {precision}, Recall: {recall}."
+        return format_str.format(**self.metrics_d)
 
     def plot(self, path_dir="/tmp/metrics", title=""):
         """
@@ -113,9 +115,9 @@ class BinaryMetrics(metrics_base.MetricsBase):
         pos_data = self.preds[self.truths == 1]
         neg_data = self.preds[self.truths == 0]
         plt.hist(x=pos_data, bins=1000, range=(0.0, 1.0), color="blue", cumulative=True,
-                histtype="step", label="Positive", density=True)
+                histtype="step", label="Positive", normed=True)
         plt.hist(x=neg_data, bins=1000, range=(0.0, 1.0), color="green", cumulative=True,
-                histtype="step", label="Negative", density=True)
+                histtype="step", label="Negative", normed=True)
         plt.xlim(0.0, 1.0)
         plt.ylim(0.0, 1.0)
         plt.title("{} KS Curve".format(title))
@@ -140,4 +142,4 @@ class BinaryMetrics(metrics_base.MetricsBase):
         plt.title("{} Precision-Recall Curve".format(title))
         plt.xlabel("Recall")
         plt.ylabel("Precision")
-        plt.savefig(os.path.join(path_dir, "pr_curve.jpg", dpi=150))
+        plt.savefig(os.path.join(path_dir, "pr_curve.jpg"), dpi=150)
