@@ -13,7 +13,7 @@ class MetricsBase(object):
     """
     The abstract base metrics class
     """
-    def __init__(preds, truths, *args, **kwargs):
+    def __init__(truths, preds, *args, **kwargs):
         """
         Parameters:
             preds: a list of guess probabilities or prediction labels
@@ -31,9 +31,12 @@ class MetricsBase(object):
     def _evaluate(self):
         raise NotImplementedError("You must inherit MetricsBase!")
 
-    def plot(self, path_dir="/tmp/metrics"):
+    def plot(self, path_dir="/tmp/metrics", title=""):
         raise NotImplementedError("You must inherit MetricsBase!")
 
     @property
     def metrics(self):
         return self.metrics_d
+
+    def __str__(self):
+        raise NotImplementedError("You must inherit MetricsBase!")
