@@ -12,6 +12,7 @@ sys.setdefaultencoding("utf-8")
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
+import copy
 
 class StringIndexer(BaseEstimator, TransformerMixin):
     """Convert categorical string to index.
@@ -71,6 +72,8 @@ class StringIndexer(BaseEstimator, TransformerMixin):
         """
         mapping = None
 
+        new_X = copy.deepcopy(X)
+
         def transform_value(x):
             if pd.isnull(x):
                 return 0
@@ -80,12 +83,12 @@ class StringIndexer(BaseEstimator, TransformerMixin):
         for transform in self.mapping:
             colname = transform["name"]
             mapping = dict(transform["mapping"])
-            X[colname + "_tmp"] = X[colname].map(transform_value)
-            del X[colname]
-            X.rename(columns={colname + "_tmp": colname}, inplace=True)
+            new_X[colname + "_tmp"] = new_X[colname].map(transform_value)
+            del new_X[colname]
+            new_X.rename(columns={colname + "_tmp": colname}, inplace=True)
 
-        return X
+        return new_X
 
     @property
-    def mapping(self):
+    def transform_mapping(self):
         return self.mapping

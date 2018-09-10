@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="poketto",
-    version="0.3.0",
+    version="0.5.0",
     keywords=["machine learning", "metrics", "feature engineering"],
     long_description="Hopefully to be a collection of machine learning toolkits.",
     author="Xu Quan",
