@@ -61,3 +61,14 @@ my_eda = eda.Eda(X=X, y=y, numeric_cols=numeric_cols, category_cols=category_col
 result = my_eda.features_distribution(plot=True)
 result = my_eda.target_distribution(plot=True)
 ```
+
+3.Feature Engineering
+```
+import poketto.feature_engineering as fe
+
+bunch = load_boston()
+features = pd.DataFrame(bunch.data, columns=bunch.feature_names)
+encoder = fe.OnehotEncoder(cols=["CHAS", "RAD"])
+encoder.fit(features)
+transformed = encoder.transform(features)
+```
