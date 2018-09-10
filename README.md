@@ -45,7 +45,8 @@ print(result["recall"])
 metric.plot(path_dir="your/path", title="your own title prefix")
 ```
 
-2.do eda(now support features and labels distribution for classification problem)
+2.do eda (now support features and labels distribution for classification problem)
+
 ```
 import poketto.eda as eda
 
