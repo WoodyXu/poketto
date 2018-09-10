@@ -16,7 +16,7 @@ pip install poketto
 
 The modules are the follows:
 
-1.do metrics (now support binary classification)
+1. do metrics (now support binary classification)
 
 ```
 import poketto.metrics as mc
@@ -45,7 +45,7 @@ print(result["recall"])
 metric.plot(path_dir="your/path", title="your own title prefix")
 ```
 
-2.do eda (now support features and labels distribution for classification problem)
+2. do eda (now support features and labels distribution for classification problem)
 
 ```
 import poketto.eda as eda
@@ -62,7 +62,7 @@ result = my_eda.features_distribution(plot=True)
 result = my_eda.target_distribution(plot=True)
 ```
 
-3.Feature Engineering
+3. Feature Engineering
 ```
 import poketto.feature_engineering as fe
 
