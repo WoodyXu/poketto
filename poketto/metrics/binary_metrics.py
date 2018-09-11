@@ -88,7 +88,7 @@ class BinaryMetrics(MetricsBase):
 
     def __str__(self):
         format_str = "AUC: {auc}, KS: {ks}, Optimal Cut: {opt_cut}\n" \
-                     "MSE: {mse},Log Loss: {log_loss}, Average Precision: {average_precision}\n" \
+                     "MSE: {mse},Log Loss: {logloss}, Average Precision: {average_precision}\n" \
                      "Accurary: {accuracy}, Precision: {precision}, Recall: {recall}."
         return format_str.format(**self.metrics_d)
 
